@@ -34,18 +34,19 @@ namespace MyTCPServer
                                 command = command[1].Split(')');
                                 if (command[0] == "")
                                 {
-                                    Start(IPAddress.Parse(GetLocalIP()));
                                     Console.ForegroundColor = ConsoleColor.Green;
                                     Console.WriteLine("Server started at {0} on port {1}", GetLocalIP(), 13000);
                                     Console.ForegroundColor = cc;
+                                    Start(IPAddress.Parse(GetLocalIP()));
                                 }
                                 else
                                 {
                                     try
                                     {
-                                        Start(IPAddress.Parse(GetLocalIP()), int.Parse(command[0]));
+                                        Console.ForegroundColor = ConsoleColor.Green;
                                         Console.WriteLine("Server started at {0} on port {1}", GetLocalIP(), int.Parse(command[0]));
                                         Console.ForegroundColor = cc;
+                                        Start(IPAddress.Parse(GetLocalIP()), int.Parse(command[0]));                                  
                                     }
                                     catch
                                     {
