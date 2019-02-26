@@ -72,6 +72,7 @@ namespace MyTCPServer
                 // Start listening for client requests.
                 server.Start();
 
+
                 // Buffer for reading data
                 byte[] bytes = new byte[256];
                 string data;
@@ -82,7 +83,6 @@ namespace MyTCPServer
                     Console.Write("Waiting for a connection... ");
 
                     // Perform a blocking call to accept requests.
-                    // You could also user server.AcceptSocket() here.
                     TcpClient client = server.AcceptTcpClient();
                     Console.WriteLine("Connected!");
 
