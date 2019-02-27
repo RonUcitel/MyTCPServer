@@ -10,6 +10,7 @@ namespace MyTCPServer
 {
     class Program
     {
+        static string name = "alon";
         static ConsoleColor cc;
         static void Main(string[] args)
         {
@@ -91,12 +92,21 @@ namespace MyTCPServer
                     NetworkStream stream = client.GetStream();
 
                     int i;
-
+                    RUN:
                     // Loop to receive all the data sent by the client.
                     while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
                     {
                         // Translate data bytes to a ASCII string.
                         data = Encoding.ASCII.GetString(bytes, 0, i);
+                        if (data.First() == '?')
+                        {
+                            byte[] returnName = Encoding.ASCII.GetBytes("~" + name);
+
+                            // Send back the name.
+                            stream.Write(returnName, 0, returnName.Length);
+                            Console.WriteLine("Sent: {0}", "~" + name);
+                            goto RUN;
+                        }
                         Console.WriteLine("Received: {0}", data);
 
                         // Process the data sent by the client.
