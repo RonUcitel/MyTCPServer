@@ -112,7 +112,7 @@ namespace MyTCPServer
                         else if (data.First() == '-')
                         {
                             data = data.Split('-')[1];
-                            Console.WriteLine("{}: {0}", data);
+                            Console.WriteLine("{clientName}: {0}", data);
 
                             byte[] msg = Encoding.ASCII.GetBytes("-" + "trying");
 
