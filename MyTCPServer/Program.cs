@@ -10,7 +10,7 @@ namespace MyTCPServer
 {
     class Program
     {
-        static string name = "alon";
+        static string name = "alon", clientName = "";
         static ConsoleColor cc;
         static void Main(string[] args)
         {
@@ -47,7 +47,7 @@ namespace MyTCPServer
                                         Console.ForegroundColor = ConsoleColor.Green;
                                         Console.WriteLine("Server started at {0} on port {1}", GetLocalIP(), int.Parse(command[0]));
                                         Console.ForegroundColor = cc;
-                                        Start(IPAddress.Parse(GetLocalIP()), int.Parse(command[0]));                                  
+                                        Start(IPAddress.Parse(GetLocalIP()), int.Parse(command[0]));
                                     }
                                     catch
                                     {
@@ -92,7 +92,6 @@ namespace MyTCPServer
                     NetworkStream stream = client.GetStream();
 
                     int i;
-                    RUN:
                     // Loop to receive all the data sent by the client.
                     while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
                     {
@@ -105,18 +104,22 @@ namespace MyTCPServer
                             // Send back the name.
                             stream.Write(returnName, 0, returnName.Length);
                             Console.WriteLine("Sent: {0}", "~" + name);
-                            goto RUN;
                         }
-                        Console.WriteLine("Received: {0}", data);
+                        else if (data.First() == '~')
+                        {
+                            clientName = data.Split('~')[1];
+                        }
+                        else if (data.First() == '-')
+                        {
+                            data = data.Split('-')[1];
+                            Console.WriteLine("{}: {0}", data);
 
-                        // Process the data sent by the client.
-                        data = data.ToUpper();
+                            byte[] msg = Encoding.ASCII.GetBytes("-" + "trying");
 
-                        byte[] msg = Encoding.ASCII.GetBytes(data);
-
-                        // Send back a response.
-                        stream.Write(msg, 0, msg.Length);
-                        Console.WriteLine("Sent: {0}", data);
+                            // Send back the name.
+                            stream.Write(msg, 0, msg.Length);
+                            Console.WriteLine("Sent: {0}", msg);
+                        }
                     }
 
                     // Shutdown and end connection
