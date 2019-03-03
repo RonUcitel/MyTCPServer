@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace MyTCPServer
 {
@@ -12,6 +13,7 @@ namespace MyTCPServer
     {
         static string name = "alon", clientName = "";
         static ConsoleColor cc;
+        static Thread[] clientsHandler = new Thread[2];
         static void Main(string[] args)
         {
             cc = Console.ForegroundColor;
@@ -83,10 +85,9 @@ namespace MyTCPServer
                 while (true)
                 {
                     Console.Write("Waiting for a connection... ");
-
                     // Perform a blocking call to accept requests.
                     TcpClient client = server.AcceptTcpClient();
-                    Console.WriteLine("Connected!");
+                    Console.WriteLine("Connected to {0}", client.Client.AddressFamily);
 
                     // Get a stream object for reading and writing
                     NetworkStream stream = client.GetStream();
@@ -139,6 +140,11 @@ namespace MyTCPServer
 
             Console.WriteLine("\nHit enter to continue...");
             Console.Read();
+        }
+
+        static void HandleClient(TcpClient client)
+        {
+
         }
 
         static string GetMyPublicIP()
