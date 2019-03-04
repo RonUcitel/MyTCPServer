@@ -13,7 +13,6 @@ namespace MyTCPServer
     {
         static string name = "alon", clientName = "";
         static ConsoleColor cc;
-        static Thread[] clientsHandler = new Thread[2];
         static void Main(string[] args)
         {
             cc = Console.ForegroundColor;
@@ -76,55 +75,16 @@ namespace MyTCPServer
                 // Start listening for client requests.
                 server.Start();
 
-
-                // Buffer for reading data
-                byte[] bytes = new byte[256];
-                string data;
-
                 // Enter the listening loop.
                 while (true)
                 {
                     Console.Write("Waiting for a connection... ");
+
                     // Perform a blocking call to accept requests.
                     TcpClient client = server.AcceptTcpClient();
+                    new Thread(HandleClient).Start(client);
+
                     Console.WriteLine("Connected to {0}", client.Client.AddressFamily);
-
-                    // Get a stream object for reading and writing
-                    NetworkStream stream = client.GetStream();
-
-                    int i;
-                    // Loop to receive all the data sent by the client.
-                    while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
-                    {
-                        // Translate data bytes to a ASCII string.
-                        data = Encoding.ASCII.GetString(bytes, 0, i);
-                        if (data.First() == '?')
-                        {
-                            byte[] returnName = Encoding.ASCII.GetBytes("~" + name);
-
-                            // Send back the name.
-                            stream.Write(returnName, 0, returnName.Length);
-                            Console.WriteLine("Sent: {0}", "~" + name);
-                        }
-                        else if (data.First() == '~')
-                        {
-                            clientName = data.Split('~')[1];
-                        }
-                        else if (data.First() == '-')
-                        {
-                            data = data.Split('-')[1];
-                            Console.WriteLine("{clientName}: {0}", data);
-
-                            byte[] msg = Encoding.ASCII.GetBytes("-" + "trying");
-
-                            // Send back the name.
-                            stream.Write(msg, 0, msg.Length);
-                            Console.WriteLine("Sent: {0}", msg);
-                        }
-                    }
-
-                    // Shutdown and end connection
-                    client.Close();
                 }
             }
             catch (SocketException e)
@@ -136,15 +96,52 @@ namespace MyTCPServer
                 // Stop listening for new clients.
                 server.Stop();
             }
-
-
             Console.WriteLine("\nHit enter to continue...");
             Console.Read();
         }
 
-        static void HandleClient(TcpClient client)
+        private static void HandleClient(object aclient)
         {
+            TcpClient client = aclient as TcpClient;
+            // Buffer for reading data
+            byte[] bytes = new byte[256];
+            string data;
+            // Get a stream object for reading and writing
+            NetworkStream stream = client.GetStream();
 
+            int i;
+            // Loop to receive all the data sent by the client.
+            while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
+            {
+                // Translate data bytes to a ASCII string.
+                data = Encoding.ASCII.GetString(bytes, 0, i);
+                if (data.First() == '?')
+                {
+                    byte[] returnName = Encoding.ASCII.GetBytes("~" + name);
+
+                    // Send back the name.
+                    stream.Write(returnName, 0, returnName.Length);
+                    Console.WriteLine("Sent: {0}", "~" + name);
+                }
+                else if (data.First() == '~')
+                {
+                    clientName = data.Split('~')[1];
+                }
+                else if (data.First() == '-')
+                {
+                    data = data.Split('-')[1];
+                    Console.WriteLine("{clientName}: {0}", data);
+
+                    byte[] msg = Encoding.ASCII.GetBytes("-" + "trying");
+
+                    // Send back the name.
+                    stream.Write(msg, 0, msg.Length);
+                    Console.WriteLine("Sent: {0}", msg);
+                }
+            }
+
+            // Shutdown and end connection
+            client.Close();
         }
 
         static string GetMyPublicIP()
