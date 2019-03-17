@@ -28,7 +28,7 @@ namespace MyTCPServer
             {
                 if (item.Name != dm.Name)
                 {
-                    item.GetStream().Write(dm, 0, dm.Length);
+                    item.tcpClient.GetStream().Write(dm, 0, dm.Length);
                 }
             }
         }
@@ -95,10 +95,10 @@ namespace MyTCPServer
                     Console.Write("Waiting for a connection... ");
 
                     // Perform a blocking call to accept requests.
-                    Client client = server.AcceptTcpClient() as Client;
+                    Client client = new Client("", server.AcceptTcpClient());
                     new Thread(HandleClient).Start(client);
                     clients.Add(client);
-                    Console.WriteLine("Connected to {0}", client.Client.AddressFamily);
+                    Console.WriteLine("Connected to {0}", client.tcpClient.Client.AddressFamily);
                 }
             }
             catch (SocketException e)
@@ -114,14 +114,14 @@ namespace MyTCPServer
             Console.Read();
         }
 
-        private static void HandleClient(object aclient)
+        private static void HandleClient(object oclient)
         {
-            Client client = aclient as Client;
+            Client client = new Client("", oclient as TcpClient);
             // Buffer for reading data
             byte[] bytes = new byte[256];
             string data;
             // Get a stream object for reading and writing
-            NetworkStream stream = client.GetStream();
+            NetworkStream stream = client.tcpClient.GetStream();
 
             int i;
             // Loop to receive all the data sent by the client.
@@ -145,7 +145,7 @@ namespace MyTCPServer
             }
 
             // Shutdown and end connection
-            client.Close();
+            client.tcpClient.Close();
         }
 
         static string GetMyPublicIP()

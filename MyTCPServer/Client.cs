@@ -8,12 +8,15 @@ using System.Net.Sockets;
 
 namespace MyTCPServer
 {
-    class Client: TcpClient
+    class Client
     {
         public string Name { get; set; }
-        public Client(string name)
+        public TcpClient tcpClient { get; set; }
+
+        public Client(string name, TcpClient tcpclient)
         {
             this.Name = name;
+            this.tcpClient = tcpclient;
         }
     }
 }
