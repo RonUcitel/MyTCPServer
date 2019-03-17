@@ -11,59 +11,67 @@ namespace MyTCPServer
 {
     class Program
     {
-        static string name = "alon", clientName = "";
         static ConsoleColor cc;
+        static List<string> names = new List<string>();
         static void Main(string[] args)
         {
             cc = Console.ForegroundColor;
             while (true)
             {
-            START:
-                Console.Write("~ ");
-                string x = Console.ReadLine();
-                if (x.First() == '-')
-                {
-                    string[] command = x.Split('-');
-                    command = command[1].Split('(');
-                    if (command.Length == 1)
-                    {
-                        goto START;
-                    }
-                    switch (command[0])
-                    {
-                        case "start":
-                            {
-                                command = command[1].Split(')');
-                                if (command[0] == "")
-                                {
-                                    Console.ForegroundColor = ConsoleColor.Green;
-                                    Console.WriteLine("Server started at {0} on port {1}", GetLocalIP(), 13000);
-                                    Console.ForegroundColor = cc;
-                                    Start(IPAddress.Parse(GetLocalIP()));
-                                }
-                                else
-                                {
-                                    try
-                                    {
-                                        Console.ForegroundColor = ConsoleColor.Green;
-                                        Console.WriteLine("Server started at {0} on port {1}", GetLocalIP(), int.Parse(command[0]));
-                                        Console.ForegroundColor = cc;
-                                        Start(IPAddress.Parse(GetLocalIP()), int.Parse(command[0]));
-                                    }
-                                    catch
-                                    {
-                                        goto START;
-                                    }
-                                }
-                                break;
-                            }
-                        default:
-                            break;
-                    }
-                }
+                UI();
             }
         }
 
+        static async Task<DetailedMessage> SendToAll(DetailedMessage m)
+        {
+            return m;
+        }
+
+        static void UI()
+        {
+            Console.Write("~ ");
+            string x = Console.ReadLine();
+            if (x.First() == '-')
+            {
+                string[] command = x.Split('-');
+                command = command[1].Split('(');
+                if (command.Length == 1)
+                {
+                    return;
+                }
+                switch (command[0])
+                {
+                    case "start":
+                        {
+                            command = command[1].Split(')');
+                            if (command[0] == "")
+                            {
+                                Console.ForegroundColor = ConsoleColor.Green;
+                                Console.WriteLine("Server started at {0} on port {1}", GetLocalIP(), 13000);
+                                Console.ForegroundColor = cc;
+                                Start(IPAddress.Parse(GetLocalIP()));
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    Console.ForegroundColor = ConsoleColor.Green;
+                                    Console.WriteLine("Server started at {0} on port {1}", GetLocalIP(), int.Parse(command[0]));
+                                    Console.ForegroundColor = cc;
+                                    Start(IPAddress.Parse(GetLocalIP()), int.Parse(command[0]));
+                                }
+                                catch
+                                {
+                                    return;
+                                }
+                            }
+                            break;
+                        }
+                    default:
+                        break;
+                }
+            }
+        }
         static void Start(IPAddress localAddr, int port = 13000)
         {
             TcpListener server = null;
@@ -81,7 +89,7 @@ namespace MyTCPServer
                     Console.Write("Waiting for a connection... ");
 
                     // Perform a blocking call to accept requests.
-                    TcpClient client = server.AcceptTcpClient();
+                    Client client = server.AcceptTcpClient() as Client;
                     new Thread(HandleClient).Start(client);
 
                     Console.WriteLine("Connected to {0}", client.Client.AddressFamily);
@@ -98,11 +106,12 @@ namespace MyTCPServer
             }
             Console.WriteLine("\nHit enter to continue...");
             Console.Read();
+            string message = await SendToAll();
         }
 
         private static void HandleClient(object aclient)
         {
-            TcpClient client = aclient as TcpClient;
+            Client client = aclient as Client;
             // Buffer for reading data
             byte[] bytes = new byte[256];
             string data;
@@ -117,6 +126,8 @@ namespace MyTCPServer
                 data = Encoding.ASCII.GetString(bytes, 0, i);
                 if (data.First() == '?')
                 {
+                    //the client asks for the friend's name
+                    string name = GetFriendName(client.Name, names.ToArray<string>());
                     byte[] returnName = Encoding.ASCII.GetBytes("~" + name);
 
                     // Send back the name.
@@ -125,18 +136,15 @@ namespace MyTCPServer
                 }
                 else if (data.First() == '~')
                 {
-                    clientName = data.Split('~')[1];
+                    //the client sent the name
+                    client.Name = data.Split('~')[1];
                 }
                 else if (data.First() == '-')
                 {
+                    //the client sent a message
                     data = data.Split('-')[1];
-                    Console.WriteLine("{clientName}: {0}", data);
-
-                    byte[] msg = Encoding.ASCII.GetBytes("-" + "trying");
-
-                    // Send back the name.
-                    stream.Write(msg, 0, msg.Length);
-                    Console.WriteLine("Sent: {0}", msg);
+                    DetailedMessage dm = data;
+                    Console.WriteLine(dm.ToString());
                 }
             }
 
@@ -161,6 +169,18 @@ namespace MyTCPServer
                 }
             }
             throw new Exception("No network adapters with an IPv4 address in the system!");
+        }
+
+        public static string GetFriendName(string name, string[] clients)
+        {
+            for (int i = 0; i < clients.Length; i++)
+            {
+                if (clients[i] != name)
+                {
+                    return clients[i];
+                }
+            }
+            return "";
         }
     }
 }
