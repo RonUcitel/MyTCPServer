@@ -12,7 +12,7 @@ namespace MyTCPServer
     class Program
     {
         static ConsoleColor cc;
-        static List<string> names = new List<string>();
+        static List<Client> clients = new List<Client>();
         static void Main(string[] args)
         {
             cc = Console.ForegroundColor;
@@ -22,9 +22,15 @@ namespace MyTCPServer
             }
         }
 
-        static async Task<DetailedMessage> SendToAll(DetailedMessage m)
+        static void SendToAll(DetailedMessage dm)
         {
-            return m;
+            foreach (Client item in clients)
+            {
+                if (item.Name != dm.Name)
+                {
+                    item.GetStream().Write(dm, 0, dm.Length);
+                }
+            }
         }
 
         static void UI()
@@ -91,7 +97,7 @@ namespace MyTCPServer
                     // Perform a blocking call to accept requests.
                     Client client = server.AcceptTcpClient() as Client;
                     new Thread(HandleClient).Start(client);
-
+                    clients.Add(client);
                     Console.WriteLine("Connected to {0}", client.Client.AddressFamily);
                 }
             }
@@ -106,7 +112,6 @@ namespace MyTCPServer
             }
             Console.WriteLine("\nHit enter to continue...");
             Console.Read();
-            string message = await SendToAll();
         }
 
         private static void HandleClient(object aclient)
@@ -124,17 +129,7 @@ namespace MyTCPServer
             {
                 // Translate data bytes to a ASCII string.
                 data = Encoding.ASCII.GetString(bytes, 0, i);
-                if (data.First() == '?')
-                {
-                    //the client asks for the friend's name
-                    string name = GetFriendName(client.Name, names.ToArray<string>());
-                    byte[] returnName = Encoding.ASCII.GetBytes("~" + name);
-
-                    // Send back the name.
-                    stream.Write(returnName, 0, returnName.Length);
-                    Console.WriteLine("Sent: {0}", "~" + name);
-                }
-                else if (data.First() == '~')
+                if (data.First() == '~')
                 {
                     //the client sent the name
                     client.Name = data.Split('~')[1];
@@ -144,6 +139,7 @@ namespace MyTCPServer
                     //the client sent a message
                     data = data.Split('-')[1];
                     DetailedMessage dm = data;
+                    SendToAll(dm);
                     Console.WriteLine(dm.ToString());
                 }
             }

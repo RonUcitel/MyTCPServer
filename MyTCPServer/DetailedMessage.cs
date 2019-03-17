@@ -8,12 +8,15 @@ namespace MyTCPServer
 {
     class DetailedMessage
     {
-        public string Message { get; set; }
-        public string Name { get; set; }
+        public string Message { get; }
+        public string Name { get; }
+        public int Length { get; }
+
         public DetailedMessage(string sender, string text)
         {
             Message = text;
             Name = text;
+            Length = ToString().Length;
         }
         public override string ToString()
         {
