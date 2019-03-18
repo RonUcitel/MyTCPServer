@@ -28,14 +28,15 @@ namespace MyTCPServer
             //m = "name: message"
             string name = m.Split(':')[0];
             string text = m.Split(':')[1];
-            text = text.Split(' ')[1];
+            text = text.TrimStart(' ');
+            //text = text.Split(' ')[1];
+
             DetailedMessage dm = new DetailedMessage(name, text);
             return dm;
         }
-        public static implicit operator byte[](DetailedMessage dm)
+        public static implicit operator byte[] (DetailedMessage dm)
         {
             return Encoding.ASCII.GetBytes("-" + dm.ToString());
         }
-
-        }
+    }
 }
