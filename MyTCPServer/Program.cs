@@ -28,7 +28,7 @@ namespace MyTCPServer
             {
                 if (item.Name != dm.Name)
                 {
-                    item.tcpClient.GetStream().Write(dm, 0, dm.Length);
+                    item.tcpClient.GetStream().Write(dm, 0, dm.Length + 1);
                 }
             }
         }
@@ -70,6 +70,19 @@ namespace MyTCPServer
                                 {
                                     return;
                                 }
+                            }
+                            break;
+                        }
+                    case "send":
+                        {
+                            command = command[1].Split(')');
+                            if (command[0] == "")
+                            {
+
+                            }
+                            else
+                            {
+                                SendToAll(new DetailedMessage("Server", command[0]));
                             }
                             break;
                         }
@@ -116,7 +129,7 @@ namespace MyTCPServer
 
         private static void HandleClient(object oclient)
         {
-            Client client = new Client("", oclient as TcpClient);
+            Client client = (Client)oclient;
             // Buffer for reading data
             byte[] bytes = new byte[256];
             string data;
@@ -165,18 +178,6 @@ namespace MyTCPServer
                 }
             }
             throw new Exception("No network adapters with an IPv4 address in the system!");
-        }
-
-        public static string GetFriendName(string name, string[] clients)
-        {
-            for (int i = 0; i < clients.Length; i++)
-            {
-                if (clients[i] != name)
-                {
-                    return clients[i];
-                }
-            }
-            return "";
         }
     }
 }

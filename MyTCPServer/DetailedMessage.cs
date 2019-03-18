@@ -15,7 +15,7 @@ namespace MyTCPServer
         public DetailedMessage(string sender, string text)
         {
             Message = text;
-            Name = text;
+            Name = sender;
             Length = ToString().Length;
         }
         public override string ToString()
