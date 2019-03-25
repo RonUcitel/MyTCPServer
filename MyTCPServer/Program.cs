@@ -13,6 +13,7 @@ namespace MyTCPServer
     {
         static ConsoleColor cc;
         static List<Client> clients = new List<Client>();
+        static bool running = false;
         static void Main(string[] args)
         {
             cc = Console.ForegroundColor;
@@ -28,7 +29,17 @@ namespace MyTCPServer
             {
                 if (item.Name != dm.Name)
                 {
-                    item.tcpClient.GetStream().Write(dm, 0, dm.Length + 1);
+                    try
+                    {
+                        item.tcpClient.GetStream().Write(dm, 0, dm.Length + 1);
+                    }
+                    catch
+                    {
+                        string name = item.Name;
+                        clients.Remove(item);
+                        SendToAll(new DetailedMessage("Server", name + " had exit the chatroom"));
+                    }
+                    
                 }
             }
         }
@@ -49,26 +60,29 @@ namespace MyTCPServer
                 {
                     case "start":
                         {
-                            command = command[1].Split(')');
-                            if (command[0] == "")
+                            if (!running)
                             {
-                                Console.ForegroundColor = ConsoleColor.Green;
-                                Console.WriteLine("Server started at {0} on port {1}", GetLocalIP(), 13000);
-                                Console.ForegroundColor = cc;
-                                Start(IPAddress.Parse(GetLocalIP()));
-                            }
-                            else
-                            {
-                                try
+                                command = command[1].Split(')');
+                                if (command[0] == "")
                                 {
                                     Console.ForegroundColor = ConsoleColor.Green;
-                                    Console.WriteLine("Server started at {0} on port {1}", GetLocalIP(), int.Parse(command[0]));
+                                    Console.WriteLine("Server started at {0} on port {1}", GetLocalIP(), 13000);
                                     Console.ForegroundColor = cc;
-                                    Start(IPAddress.Parse(GetLocalIP()), int.Parse(command[0]));
+                                    Start(IPAddress.Parse(GetLocalIP()));
                                 }
-                                catch
+                                else
                                 {
-                                    return;
+                                    try
+                                    {
+                                        Console.ForegroundColor = ConsoleColor.Green;
+                                        Console.WriteLine("Server started at {0} on port {1}", GetLocalIP(), int.Parse(command[0]));
+                                        Console.ForegroundColor = cc;
+                                        Start(IPAddress.Parse(GetLocalIP()), int.Parse(command[0]));
+                                    }
+                                    catch
+                                    {
+                                        return;
+                                    }
                                 }
                             }
                             break;
@@ -101,6 +115,7 @@ namespace MyTCPServer
 
                 // Start listening for client requests.
                 server.Start();
+                running = true;
 
                 // Enter the listening loop.
                 while (true)
@@ -117,11 +132,13 @@ namespace MyTCPServer
             catch (SocketException e)
             {
                 Console.WriteLine("SocketException: {0}", e);
+                running = false;
             }
             finally
             {
                 // Stop listening for new clients.
                 server.Stop();
+                running = false;
             }
             Console.WriteLine("\nHit enter to continue...");
             Console.Read();
