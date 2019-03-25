@@ -14,6 +14,7 @@ namespace MyTCPServer
         static ConsoleColor cc;
         static List<Client> clients = new List<Client>();
         static bool running = false;
+        const int k_port = 13000;
         static void Main(string[] args)
         {
             cc = Console.ForegroundColor;
@@ -25,23 +26,40 @@ namespace MyTCPServer
 
         static void SendToAll(DetailedMessage dm)
         {
-            foreach (Client item in clients)
+            for (int i = 0; i < clients.Count; i++)
             {
-                if (item.Name != dm.Name)
+                if (clients[i].Name != dm.Name)
                 {
                     try
                     {
-                        item.tcpClient.GetStream().Write(dm, 0, dm.Length + 1);
+                        clients[i].tcpClient.GetStream().Write(dm, 0, dm.Length + 1);
                     }
                     catch
                     {
-                        string name = item.Name;
-                        clients.Remove(item);
+                        string name = clients[i].Name;
+                        clients.Remove(clients[i]);
                         SendToAll(new DetailedMessage("Server", name + " had exit the chatroom"));
                     }
-                    
+
                 }
             }
+            //foreach (Client item in clients)
+            //{
+            //    if (item.Name != dm.Name)
+            //    {
+            //        try
+            //        {
+            //            item.tcpClient.GetStream().Write(dm, 0, dm.Length + 1);
+            //        }
+            //        catch
+            //        {
+            //            string name = item.Name;
+            //            clients.Remove(item);
+            //            SendToAll(new DetailedMessage("Server", name + " had exit the chatroom"));
+            //        }
+
+            //    }
+            //}
         }
 
         static void UI()
@@ -66,9 +84,9 @@ namespace MyTCPServer
                                 if (command[0] == "")
                                 {
                                     Console.ForegroundColor = ConsoleColor.Green;
-                                    Console.WriteLine("Server started at {0} on port {1}", GetLocalIP(), 13000);
+                                    Console.WriteLine("Server started at {0} on port {1}", GetLocalIP(), k_port);
                                     Console.ForegroundColor = cc;
-                                    Start(IPAddress.Parse(GetLocalIP()));
+                                    new Thread(Start).Start(new object[] { IPAddress.Parse(GetLocalIP()), k_port });
                                 }
                                 else
                                 {
@@ -77,7 +95,7 @@ namespace MyTCPServer
                                         Console.ForegroundColor = ConsoleColor.Green;
                                         Console.WriteLine("Server started at {0} on port {1}", GetLocalIP(), int.Parse(command[0]));
                                         Console.ForegroundColor = cc;
-                                        Start(IPAddress.Parse(GetLocalIP()), int.Parse(command[0]));
+                                        new Thread(Start).Start(new object[] { IPAddress.Parse(GetLocalIP()), int.Parse(command[0]) });
                                     }
                                     catch
                                     {
@@ -105,8 +123,11 @@ namespace MyTCPServer
                 }
             }
         }
-        static void Start(IPAddress localAddr, int port = 13000)
+        static void Start(object a)//IPAddress localAddr, int port = 13000)
         {
+            object[] par = (object[])a;
+            IPAddress localAddr = (IPAddress)par[0];
+            int port = (int)par[1];
             TcpListener server = null;
             try
             {
