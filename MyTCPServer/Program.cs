@@ -38,7 +38,7 @@ namespace MyTCPServer
                     {
                         string name = clients[i].Name;
                         clients.Remove(clients[i]);
-                        SendToAll(new DetailedMessage("Server", name + " had exit the chatroom"));
+                        i--;
                     }
 
                 }
